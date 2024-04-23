@@ -3,6 +3,7 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Define the Candidate class to represent candidates
 class Candidate:
     def __init__(self, name, party, campaign_quote):
         self.name = name
@@ -12,6 +13,7 @@ class Candidate:
     def __str__(self):
         return f"{self.name} ({self.party}): {self.campaign_quote}"
 
+# Define the Voter class to represent voters
 class Voter:
     def __init__(self, name):
         self.name = name
@@ -21,9 +23,11 @@ class Voter:
     def __str__(self):
         return f"{self.name} (Voter ID: {self.voter_id})"
 
+    # Generate a unique voter ID using SHA-256 hashing
     def generate_voter_id(self, name):
         return hashlib.sha256(name.encode()).hexdigest()[:8]
 
+# Define the Ballot class to represent individual votes
 class Ballot:
     def __init__(self, voter_id, encrypted_vote):
         self.voter_id = voter_id
@@ -32,12 +36,14 @@ class Ballot:
     def __str__(self):
         return f"Voter ID: {self.voter_id}, Encrypted Vote: {self.encrypted_vote}"
 
+# Define the Election class to manage the entire electoral process
 class Election:
     def __init__(self, parties):
         self.parties = parties
         self.voters = {}
         self.ballots = []
 
+    # Register a new voter
     def register_voter(self, voter):
         if voter.voter_id not in self.voters:
             self.voters[voter.voter_id] = voter
@@ -45,15 +51,18 @@ class Election:
         else:
             print("Voter already registered.")
 
+    # Authenticate a voter before allowing them to vote
     def authenticate_voter(self, voter_id):
         return voter_id in self.voters and not self.voters[voter_id].has_voted
 
+    # Simulate encryption of vote
     def encrypt_vote(self, voter_id, candidate):
         # Simulate encryption (e.g., using a random key)
         key = random.randint(1, 1000)
         encrypted_vote = hashlib.sha256(f"{voter_id}-{candidate.name}-{key}".encode()).hexdigest()
         return encrypted_vote
 
+    # Allow a voter to cast their vote
     def vote(self, voter_id, candidate):
         if self.authenticate_voter(voter_id):
             encrypted_vote = self.encrypt_vote(voter_id, candidate)
@@ -63,10 +72,12 @@ class Election:
         else:
             print("Voter not authenticated or already voted.")
 
+    # Simulate decryption of vote
     def decrypt_vote(self, encrypted_vote):
         # Simulate decryption (in a real system, decryption key would be securely managed)
         return encrypted_vote
 
+    # Count votes and visualize results
     def count_votes(self):
         print("Vote Count:")
         party_results = {party: {candidate: 0 for candidate in party.candidates} for party in self.parties}
@@ -81,8 +92,9 @@ class Election:
             if candidate:
                 party_results[candidate.party][candidate] += 1
 
+        # Print vote counts for each party
         for party, results in party_results.items():
-            print(f"\n{party.name} Vote Count:")
+            print(f"\n{party} Vote Count:")
             for candidate, votes in results.items():
                 print(f"{candidate.name}: {votes} votes")
 
@@ -96,7 +108,7 @@ class Election:
         for i, party in enumerate(self.parties):
             candidates = [candidate.name for candidate in party.candidates]
             votes = [party_results[party][candidate] for candidate in party.candidates]
-            ax.bar(index + i * bar_width, votes, bar_width, alpha=opacity, label=party.name)
+            ax.bar(index + i * bar_width, votes, bar_width, alpha=opacity, label=party)
 
         ax.set_xlabel('Candidates')
         ax.set_ylabel('Number of Votes')
@@ -108,6 +120,7 @@ class Election:
         plt.tight_layout()
         plt.show()
 
+# Define the main function
 def main():
     # Define parties with their candidates and campaign quotes
     party1_candidates = [
@@ -127,9 +140,9 @@ def main():
 
     # Initialize election with parties
     election = Election([
-        Party("Party X", party1_candidates),
-        Party("Party Y", party2_candidates),
-        Party("Party Z", party3_candidates)
+        party1_candidates,
+        party2_candidates,
+        party3_candidates
     ])
 
     # Register voters
@@ -146,5 +159,6 @@ def main():
     # Count votes and visualize results
     election.count_votes()
 
+# Execute the main function if the script is run directly
 if __name__ == "__main__":
     main()
