@@ -59,7 +59,7 @@ class Election:
     def encrypt_vote(self, voter_id, candidate):
         # Simulate encryption (e.g., using a random key)
         key = random.randint(1, 1000)
-        encrypted_vote = hashlib.sha256(f"{voter_id}-{candidate.name}-{key}".encode()).hexdigest()
+        encrypted_vote = f"{voter_id}-{candidate.name}-{key}"
         return encrypted_vote
 
     # Allow a voter to cast their vote
@@ -72,25 +72,33 @@ class Election:
         else:
             print("Voter not authenticated or already voted.")
 
-    # Simulate decryption of vote
+    # Decrypt the encrypted vote
     def decrypt_vote(self, encrypted_vote):
-        # Simulate decryption (in a real system, decryption key would be securely managed)
-        return encrypted_vote
+        try:
+            parts = encrypted_vote.split("-")
+            if len(parts) == 3:
+                voter_id, candidate_name, _ = parts
+                return voter_id, candidate_name
+            else:
+                raise ValueError("Incorrect format of encrypted vote")
+        except ValueError as e:
+            print(f"Error: {e}")
+            return None, None
 
     # Count votes and visualize results
     def count_votes(self):
         print("Vote Count:")
-        party_results = {party: {candidate: 0 for candidate in party.candidates} for party in self.parties}
+        party_results = {party[0].party: {candidate: 0 for candidate in party} for party in self.parties}
         for ballot in self.ballots:
-            decrypted_vote = self.decrypt_vote(ballot.encrypted_vote)
-            voter_id, candidate_name, key = decrypted_vote.split("-")
-            candidate = None
-            for party in self.parties:
-                candidate = next((c for c in party.candidates if c.name == candidate_name), None)
+            voter_id, candidate_name = self.decrypt_vote(ballot.encrypted_vote)
+            if voter_id is not None and candidate_name is not None:
+                candidate = None
+                for party in self.parties:
+                    candidate = next((c for c in party if c.name == candidate_name), None)
+                    if candidate:
+                        break
                 if candidate:
-                    break
-            if candidate:
-                party_results[candidate.party][candidate] += 1
+                    party_results[candidate.party][candidate] += 1
 
         # Print vote counts for each party
         for party, results in party_results.items():
@@ -100,15 +108,16 @@ class Election:
 
         # Visualize results using a bar graph
         num_parties = len(self.parties)
+        num_candidates = max(len(party) for party in self.parties)
         fig, ax = plt.subplots()
-        index = np.arange(num_parties)
-        bar_width = 0.35
+        index = np.arange(num_candidates)
+        bar_width = 0.2
         opacity = 0.8
 
         for i, party in enumerate(self.parties):
-            candidates = [candidate.name for candidate in party.candidates]
-            votes = [party_results[party][candidate] for candidate in party.candidates]
-            ax.bar(index + i * bar_width, votes, bar_width, alpha=opacity, label=party)
+            candidates = [candidate.name for candidate in party]
+            votes = [party_results[party[0].party][candidate] for candidate in party]
+            ax.bar(index + i * bar_width, votes, bar_width, alpha=opacity, label=party[0].party)
 
         ax.set_xlabel('Candidates')
         ax.set_ylabel('Number of Votes')
@@ -153,7 +162,7 @@ def main():
     # Simulate voting process
     for voter in voters:
         party = random.choice(election.parties)
-        candidate = random.choice(party.candidates)
+        candidate = random.choice(party)
         election.vote(voter.voter_id, candidate)
 
     # Count votes and visualize results
